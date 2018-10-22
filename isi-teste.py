@@ -4,7 +4,6 @@
 import requests, urllib3, os, glob, sys
 from json import dumps, load
 import shutil
-from shutil import copyfile
 from hashlib import md5
 from datetime import datetime,date,time
 
@@ -34,7 +33,7 @@ CLASS_NAMES = {
 STAGE_DIR = '/tmp/stage'
 BACKUP_DIR = '/tmp/backup'
 now = datetime.now()
-stringDate = now.strftime("%Y-%m-%d_%H:%M")
+stringDate = now.strftime("%Y%m%d_%H%M")
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
@@ -192,13 +191,19 @@ if __name__ == "__main__":
                     backup_json = load(backup_fh)
 
                     if stage_json == backup_json:
-                        print('OK')
+                        print('Content from both files is the same - %s|%s' %(stage_json, backup_json))
                     else:    
                         # Caso tenha modificação, é criado um novo arquivo, em que o mesmo consta a prefixação da data
-                        newFile = os.path.join(BACKUP_DIR, '%s_%s.json' %(file_name[:-5],stringDate))
-                        shutil.move(os.path.join(BACKUP_DIR, file_name), newFile)
+                        old_version_file_path = os.path.join(BACKUP_DIR, '%s_%s.json' %(file_name[:-5],stringDate))
+                        shutil.move(file_path_backup, old_version_file_path)
+
+                        # e um novo arquivo é criado com os dados atuais
+                        shutil.copyfile(file_path_stage, file_path_backup)
+
         else: 
             
             # se nao existir o arquivo, basta copiar o arquivo da area de stage para backup
-            copyfile(file_path_stage, file_path_backup)
-            #os.remove(file_path_stage)
+            shutil.copyfile(file_path_stage, file_path_backup)
+            
+        # remove os arquivos da area de stage    
+        os.remove(file_path_stage)
