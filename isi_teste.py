@@ -39,13 +39,14 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 class IsiJson(object):
 
-    def __init__(self, json_attribute_name, parents={}, children=[]):
-        self.json_attribute_name = json_attribute_name
-        self.api_call_template = API_CALLS[json_attribute_name]
+    json_attribute_name = None
+    parents = {}
+    children = []
+    objects = []
+    exclude_keys_for_restore = []
+
+    def __init__(self, parents={}):
         self.parents = parents
-        self.children = children
-        
-        self.objects = []
 
     def generate_dump_name(self, sub_object_id):
         return '%s-%s.json' % (self.json_attribute_name, sub_object_id)
@@ -91,44 +92,65 @@ class IsiJson(object):
     def get_api_call_string(self):
         return API_URL + API_CALLS[self.json_attribute_name]
 
+    def restore(self, backup_file_name):
+        
+        file_path_backup = os.path.join(BACKUP_DIR, backup_file_name)
+
+        if os.path.isfile(file_path_backup):
+            
+            with open(file_path_backup) as backup_fh:
+                
+                backup_json = load(backup_fh)
+
+                for key in self.exclude_keys_for_restore:
+                    backup_json.pop(key, None)
+
+                print(backup_json)
+
+                response = requests.post(self.get_api_call_string(), auth=('root', 'laboratory'), verify=False, data = dumps(backup_json))
+
+                if response.status_code == 201:
+                    print('Restore concluido com sucesso')
+                else:
+                    print('Falha no processo de restore')
+                    print(response.text)
+
 class Groupnets(IsiJson):
 
-    def __init__(self):
-        super().__init__('groupnets', {}, ['subnets'])
+    json_attribute_name = 'groupnets'
+    children = ['subnets']
 
 class Subnets(IsiJson):
 
-    def __init__(self, parents):
-        super().__init__('subnets', parents, ['pools'])
+    json_attribute_name = 'subnets'
+    children = ['pools']
 
     def get_api_call_string(self):
         return super().get_api_call_string() % (self.parents['groupnets'])
 
 class Pools(IsiJson):
 
-    def __init__(self, parents):
-        super().__init__('pools', parents, ['rules'])
+    json_attribute_name = 'pools'
+    children = ['rules']
 
     def get_api_call_string(self):
         return super().get_api_call_string() % (self.parents['groupnets'], self.parents['subnets'])
 
 class Rules(IsiJson):
 
-    def __init__(self, parents):
-        super().__init__('rules', parents, [])
+    json_attribute_name = 'rules'
 
     def get_api_call_string(self):
         return super().get_api_call_string() % (self.parents['groupnets'], self.parents['subnets'], self.parents['pools'])
 
 class Zones(IsiJson):
 
-    def __init__(self):
-        super().__init__('zones')
-
+    json_attribute_name = 'zones'
+    
 class Shares(IsiJson):
 
-    def __init__(self, parents):
-        super().__init__('shares', parents, [])
+    json_attribute_name = 'shares'
+    exclude_keys_for_restore = ['id', 'zid']
 
     def get_api_call_string(self):
         return super().get_api_call_string() % (self.parents['zones'])
@@ -138,8 +160,7 @@ class Shares(IsiJson):
 
 class Exports(IsiJson):
 
-    def __init__(self, parents):
-        super().__init__('exports', parents, [])
+    json_attribute_name = 'exports'
 
     def get_api_call_string(self):
         return super().get_api_call_string() % (self.parents['zones'])
@@ -190,9 +211,7 @@ if __name__ == "__main__":
                     stage_json = load(stage_fh)
                     backup_json = load(backup_fh)
 
-                    if stage_json == backup_json:
-                        print('Content from both files is the same - %s|%s' %(stage_json, backup_json))
-                    else:    
+                    if stage_json != backup_json:
                         # Caso tenha modificação, é criado um novo arquivo, em que o mesmo consta a prefixação da data
                         old_version_file_path = os.path.join(BACKUP_DIR, '%s_%s.json' %(file_name[:-5],stringDate))
                         shutil.move(file_path_backup, old_version_file_path)
