@@ -118,11 +118,13 @@ class IsiJson(object):
 class Groupnets(IsiJson):
 
     json_attribute_name = 'groupnets'
+    exclude_keys_for_restore = ['id', 'subnets']
     children = ['subnets']
 
 class Subnets(IsiJson):
 
     json_attribute_name = 'subnets'
+    exclude_keys_for_restore = ['base_addr', 'groupnet', 'id', 'pools']
     children = ['pools']
 
     def get_api_call_string(self):
@@ -131,6 +133,7 @@ class Subnets(IsiJson):
 class Pools(IsiJson):
 
     json_attribute_name = 'pools'
+    exclude_keys_for_restore = ['addr_family', 'groupnet', 'id', 'rules', 'sc_suspended_nodes', 'subnet']
     children = ['rules']
 
     def get_api_call_string(self):
@@ -139,6 +142,8 @@ class Pools(IsiJson):
 class Rules(IsiJson):
 
     json_attribute_name = 'rules'
+    exclude_keys_for_restore = ['groupnet', 'id', 'pool', 'subnet']
+
 
     def get_api_call_string(self):
         return super().get_api_call_string() % (self.parents['groupnets'], self.parents['subnets'], self.parents['pools'])
@@ -161,6 +166,8 @@ class Shares(IsiJson):
 class Exports(IsiJson):
 
     json_attribute_name = 'exports'
+    exclude_keys_for_restore = ['conflicting_paths', 'id', 'unresolved_clients']
+
 
     def get_api_call_string(self):
         return super().get_api_call_string() % (self.parents['zones'])
