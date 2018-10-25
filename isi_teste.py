@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-import requests, urllib3, os, glob, sys
+import requests, urllib3, os, glob, sys, re
 from json import dumps, load
 import shutil
 from hashlib import md5
@@ -47,6 +47,13 @@ class IsiJson(object):
 
     def __init__(self, parents={}):
         self.parents = parents
+
+    def _exclude_keys_from_json(self, json_object):
+        
+        for key in self.exclude_keys_for_restore:
+            json_object.pop(key, None)
+            
+        return json_object
 
     def generate_dump_name(self, sub_object_id):
         return '%s-%s.json' % (self.json_attribute_name, sub_object_id)
@@ -100,12 +107,7 @@ class IsiJson(object):
             
             with open(file_path_backup) as backup_fh:
                 
-                backup_json = load(backup_fh)
-
-                for key in self.exclude_keys_for_restore:
-                    backup_json.pop(key, None)
-
-                print(backup_json)
+                backup_json = self._exclude_keys_from_json(load(backup_fh))
 
                 response = requests.post(self.get_api_call_string(), auth=('root', 'laboratory'), verify=False, data = dumps(backup_json))
 
@@ -151,6 +153,25 @@ class Rules(IsiJson):
 class Zones(IsiJson):
 
     json_attribute_name = 'zones'
+    exclude_keys_for_restore = ['id', 'zone_id', 'system']
+
+    def _exclude_keys_from_json(self, json_object):
+
+        json_object = super()._exclude_keys_from_json(json_object)
+
+        auth_providers = []
+
+        for auth_provider in json_object['auth_providers']:
+            
+            m = re.search(r'lsa\-local\-provider',auth_provider)
+            
+            if not m:
+                auth_providers.append(auth_provider)
+
+        json_object['auth_providers'] = auth_providers
+
+        return json_object
+
     
 class Shares(IsiJson):
 
