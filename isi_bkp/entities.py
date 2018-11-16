@@ -1,6 +1,3 @@
-#!/usr/bin/python
-# -*- coding: utf-8 -*-
-
 import requests, urllib3, os, glob, sys, re
 from json import dumps, load
 import shutil
@@ -47,6 +44,9 @@ class IsiJson(object):
 
     def __init__(self, parents={}):
         self.parents = parents
+
+    def __str__(self):
+        return 'Objeto Isilon tipo %s' % (self.json_attribute_name)
 
     def _exclude_keys_from_json(self, json_object):
         
@@ -121,7 +121,7 @@ class Groupnets(IsiJson):
 
     json_attribute_name = 'groupnets'
     exclude_keys_for_restore = ['id', 'subnets']
-    children = ['subnets']
+    children = ['subnets']  
 
 class Subnets(IsiJson):
 
@@ -198,59 +198,3 @@ class Exports(IsiJson):
 
     def backup_children(self):
         return True
-
-
-if __name__ == "__main__":
-
-    for dir_path in [STAGE_DIR, BACKUP_DIR]:
-        if not os.path.isdir(dir_path): 
-            os.mkdir(dir_path)
-
-    #
-    # backup
-    #
-
-    # cria os dumps
-    groupnets = Groupnets()
-    groupnets.backup()
-
-    zones = Zones()
-    zones.backup()
-
-    for zone in zones.objects:
-
-        share = Shares( {'zones': zone['name']} )
-        share.backup()
-
-        exports = Exports({'zones': zone['name']})
-        exports.backup()
-
-    for file_name in os.listdir(STAGE_DIR):
-
-        file_path_stage = os.path.join(STAGE_DIR, file_name)
-        file_path_backup = os.path.join(BACKUP_DIR, file_name)
-
-        # verifica se existe o arquivo no destino
-        if os.path.isfile(file_path_backup):
-            
-            # se existir o arquivo, verifica se houve alteracao no arquivo
-            with open(file_path_stage) as stage_fh:
-                with open(file_path_backup) as backup_fh:
-                    stage_json = load(stage_fh)
-                    backup_json = load(backup_fh)
-
-                    if stage_json != backup_json:
-                        # Caso tenha modificação, é criado um novo arquivo, em que o mesmo consta a prefixação da data
-                        old_version_file_path = os.path.join(BACKUP_DIR, '%s_%s.json' %(file_name[:-5],stringDate))
-                        shutil.move(file_path_backup, old_version_file_path)
-
-                        # e um novo arquivo é criado com os dados atuais
-                        shutil.copyfile(file_path_stage, file_path_backup)
-
-        else: 
-            
-            # se nao existir o arquivo, basta copiar o arquivo da area de stage para backup
-            shutil.copyfile(file_path_stage, file_path_backup)
-            
-        # remove os arquivos da area de stage    
-        os.remove(file_path_stage)
