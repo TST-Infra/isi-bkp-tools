@@ -1,8 +1,5 @@
-import requests, urllib3, os, glob, sys, re
+import requests, urllib3, os, re
 from json import dumps, load
-import shutil
-from hashlib import md5
-from datetime import datetime,date,time
 
 USERNAME = 'root'
 PASSWORD = 'laboratory'
@@ -29,36 +26,50 @@ CLASS_NAMES = {
 
 STAGE_DIR = '/tmp/stage'
 BACKUP_DIR = '/tmp/backup'
-now = datetime.now()
-stringDate = now.strftime("%Y%m%d_%H%M")
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 class IsiJson(object):
+    """
 
+    """
     json_attribute_name = None
-    parents = {}
+    parents = []
     children = []
     objects = []
     exclude_keys_for_restore = []
 
-    def __init__(self, parents={}):
+    def __init__(self, parents = []):
+        """
+
+        """
         self.parents = parents
 
     def __str__(self):
+        """
+
+        """
         return 'Objeto Isilon tipo %s' % (self.json_attribute_name)
 
     def _exclude_keys_from_json(self, json_object):
-        
+        """
+
+        """
         for key in self.exclude_keys_for_restore:
             json_object.pop(key, None)
             
         return json_object
 
     def generate_dump_name(self, sub_object_id):
+        """
+
+        """
         return '%s-%s.json' % (self.json_attribute_name, sub_object_id)
 
     def backup(self):
+        """
+
+        """
         self.set_objects()
 
         for object_data in self.objects:
@@ -67,9 +78,13 @@ class IsiJson(object):
             fh_json.write(dumps(object_data))
             fh_json.close()
 
-        self.backup_children()
+        if len(self.children):
+            self.backup_children()
 
     def set_objects(self):
+        """
+
+        """
         response = requests.get(self.get_api_call_string(), auth=('root', 'laboratory'), verify=False)
 
         if response.status_code == 200:
@@ -81,26 +96,33 @@ class IsiJson(object):
             print('deu merda')
 
     def backup_children(self):
+        """
 
-        for data in self.objects:
+        """
+        for object_data in self.objects:
             
-            object_name = data['name']
+            object_name = object_data['name']
 
             for child_attribute in self.children:
 
-                if len(data[child_attribute]):
+                if len(object_data[child_attribute]):
                     
                     parents = self.parents
-                    parents[self.json_attribute_name] = object_name
+                    parents.append(object_name)
 
                     child_object = globals()[CLASS_NAMES[child_attribute]](parents)
                     child_object.backup()
 
     def get_api_call_string(self):
+        """
+
+        """
         return API_URL + API_CALLS[self.json_attribute_name]
 
     def restore(self, backup_file_name):
-        
+        """
+
+        """
         file_path_backup = os.path.join(BACKUP_DIR, backup_file_name)
 
         if os.path.isfile(file_path_backup):
@@ -118,45 +140,66 @@ class IsiJson(object):
                     print(response.text)
 
 class Groupnets(IsiJson):
+    """
 
+    """
     json_attribute_name = 'groupnets'
     exclude_keys_for_restore = ['id', 'subnets']
     children = ['subnets']  
 
 class Subnets(IsiJson):
+    """
 
+    """
     json_attribute_name = 'subnets'
     exclude_keys_for_restore = ['base_addr', 'groupnet', 'id', 'pools']
     children = ['pools']
 
     def get_api_call_string(self):
-        return super().get_api_call_string() % (self.parents['groupnets'])
+        """
+
+        """
+        return super().get_api_call_string() % (self.parents[0])
 
 class Pools(IsiJson):
+    """
 
+    """
     json_attribute_name = 'pools'
     exclude_keys_for_restore = ['addr_family', 'groupnet', 'id', 'rules', 'sc_suspended_nodes', 'subnet']
     children = ['rules']
 
     def get_api_call_string(self):
-        return super().get_api_call_string() % (self.parents['groupnets'], self.parents['subnets'])
+        """
+
+        """
+        return super().get_api_call_string() % (self.parents[0], self.parents[1])
 
 class Rules(IsiJson):
+    """
 
+    """
     json_attribute_name = 'rules'
     exclude_keys_for_restore = ['groupnet', 'id', 'pool', 'subnet']
 
 
     def get_api_call_string(self):
-        return super().get_api_call_string() % (self.parents['groupnets'], self.parents['subnets'], self.parents['pools'])
+        """
+
+        """
+        return super().get_api_call_string() % (self.parents[0], self.parents[1], self.parents[2])
 
 class Zones(IsiJson):
+    """
 
+    """
     json_attribute_name = 'zones'
     exclude_keys_for_restore = ['id', 'zone_id', 'system']
 
     def _exclude_keys_from_json(self, json_object):
+        """
 
+        """
         json_object = super()._exclude_keys_from_json(json_object)
 
         auth_providers = []
@@ -174,27 +217,40 @@ class Zones(IsiJson):
 
     
 class Shares(IsiJson):
+    """
 
+    """
     json_attribute_name = 'shares'
     exclude_keys_for_restore = ['id', 'zid']
 
     def get_api_call_string(self):
-        return super().get_api_call_string() % (self.parents['zones'])
+        """
+
+        """
+        return super().get_api_call_string() % (self.parents[0])
 
     def generate_dump_name(self, sub_object_id):
-        return '%s-%s.%s.json' % (self.json_attribute_name, self.parents['zones'], sub_object_id)
+        """
+
+        """
+        return '%s-%s.%s.json' % (self.json_attribute_name, self.parents[0], sub_object_id)
 
 class Exports(IsiJson):
+    """
 
+    """
     json_attribute_name = 'exports'
     exclude_keys_for_restore = ['conflicting_paths', 'id', 'unresolved_clients']
 
 
     def get_api_call_string(self):
-        return super().get_api_call_string() % (self.parents['zones'])
+        """
+
+        """
+        return super().get_api_call_string() % (self.parents[0])
 
     def generate_dump_name(self, sub_object_id):
-        return '%s-%s.%s.json' % (self.json_attribute_name, self.parents['zones'], sub_object_id)
+        """
 
-    def backup_children(self):
-        return True
+        """
+        return '%s-%s.%s.json' % (self.json_attribute_name, self.parents[0], sub_object_id)
