@@ -1,10 +1,5 @@
-import requests, urllib3, os, re
+import requests, urllib3, os, re, sys
 from json import dumps, load
-
-USERNAME = 'root'
-PASSWORD = 'laboratory'
-
-API_URL = 'https://labisilon-mgr.rede.tst:8080/platform'
 
 API_CALLS = {
     'groupnets': '/3/network/groupnets',
@@ -24,10 +19,24 @@ CLASS_NAMES = {
     'zones': 'Zones',
 }
 
-STAGE_DIR = '/tmp/stage'
-BACKUP_DIR = '/tmp/backup'
+STAGE_DIR = '/opt/isi-bkp-tools/stage'
+BACKUP_DIR = '/opt/isi-bkp-tools/backup'
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+
+class Connect():
+    """
+
+    """
+
+    username = 'root'
+    password = 'laboratory'
+    api_url  = 'https://labisilon-mgr.rede.tst:8080/platform'
+
+    def set_connection_params(**kwargs):
+        Connect.username = kwargs['username']
+        Connect.password = kwargs['password']
+        Connect.api_url  = kwargs['api_url']
 
 class IsiJson(object):
     """
@@ -50,6 +59,12 @@ class IsiJson(object):
 
         """
         return 'Objeto Isilon tipo %s' % (self.json_attribute_name)
+
+    def print_username(self):
+        print(Connect.username)
+
+    def url(self):
+        return Connect.api_url
 
     def _exclude_keys_from_json(self, json_object):
         """
@@ -85,7 +100,7 @@ class IsiJson(object):
         """
 
         """
-        response = requests.get(self.get_api_call_string(), auth=('root', 'laboratory'), verify=False)
+        response = requests.get(self.get_api_call_string(), auth=(Connect.username, Connect.password), verify=False)
 
         if response.status_code == 200:
             
@@ -93,7 +108,7 @@ class IsiJson(object):
             self.objects = data[self.json_attribute_name]
 
         else: 
-            print('deu merda')
+            sys.exit('error 404')
 
     def backup_children(self):
         """
@@ -117,7 +132,7 @@ class IsiJson(object):
         """
 
         """
-        return API_URL + API_CALLS[self.json_attribute_name]
+        return Connect.api_url + API_CALLS[self.json_attribute_name]
 
     def restore(self, backup_file_name):
         """
@@ -131,7 +146,7 @@ class IsiJson(object):
                 
                 backup_json = self._exclude_keys_from_json(load(backup_fh))
 
-                response = requests.post(self.get_api_call_string(), auth=('root', 'laboratory'), verify=False, data = dumps(backup_json))
+                response = requests.post(self.get_api_call_string(), auth=(Connect.username, Connect.password), verify=False, data = dumps(backup_json))
 
                 if response.status_code == 201:
                     print('Restore concluido com sucesso')
@@ -145,7 +160,7 @@ class Groupnets(IsiJson):
     """
     json_attribute_name = 'groupnets'
     exclude_keys_for_restore = ['id', 'subnets']
-    children = ['subnets']  
+    children = ['subnets']
 
 class Subnets(IsiJson):
     """
@@ -254,3 +269,4 @@ class Exports(IsiJson):
 
         """
         return '%s-%s.%s.json' % (self.json_attribute_name, self.parents[0], sub_object_id)
+        

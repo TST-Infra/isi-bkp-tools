@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 
-from isi_bkp.entities import Groupnets, Zones, Shares, Exports, Pools, Rules, STAGE_DIR, BACKUP_DIR, CLASS_NAMES
+from isi_bkp.entities import Groupnets, Zones, Shares, Exports, Connect, Pools, Rules, STAGE_DIR, BACKUP_DIR, CLASS_NAMES
 from json import dumps, load
 from datetime import datetime
 import argparse, os, re, sys, shutil
@@ -8,8 +8,11 @@ import argparse, os, re, sys, shutil
 parser = argparse.ArgumentParser(description='bkp-tools')
 parser.add_argument('-b','--backup', action="store_true", help='Do backup')
 parser.add_argument('-r','--restore', type = str, metavar = '', help='Do restore')
-parser.add_argument('-l','--list', type = str,help='List')
-parser.add_argument('-wc','--whatChanged', action="store_true" , help='What has changed?')
+parser.add_argument('-l','--list', type = str,help='List',metavar = '')
+parser.add_argument('-wc','--whatChanged', action="store_true" , help='What has changed')
+parser.add_argument('-u','--username', type=str, metavar='', required=False, help='Inform username to connect')
+parser.add_argument('-p','--password', type=str, metavar='', required=False, help='Inform password to connect')
+parser.add_argument('-url','--api_url', type=str, metavar='', required=False, help='Inform url to connect')
 args = parser.parse_args()
 
 def dump_conf_to_stage():
@@ -32,10 +35,10 @@ def dump_conf_to_stage():
     # para cada zone, backup de exports e shares
     for zone in zones.objects:
 
-        share = Shares( {'zones': zone['name']} )
+        share = Shares([zone['name']])
         share.backup()
 
-        exports = Exports({'zones': zone['name']})
+        exports = Exports([zone['name']])
         exports.backup()
 
 def backup():
@@ -67,8 +70,7 @@ def backup():
         else: 
             
             shutil.copyfile(file_path_stage, file_path_backup)
-
-        os.remove(file_path_stage)
+            os.remove(file_path_stage)
 
 def restore(file_name):
     """
@@ -121,11 +123,14 @@ def whatChanged():
 
         else: 
             sys.exit(0)
-        
+
         os.remove(file_path_stage)
+
 
 if __name__ == "__main__":
     
+    Connect.set_connection_params(username = args.username, password = args.password, api_url = args.api_url)
+
     if args.backup:
         backup()
     elif args.restore:
