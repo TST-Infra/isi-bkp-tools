@@ -154,6 +154,15 @@ class IsiJson(object):
                     print('Falha no processo de restore')
                     print(response.text)
 
+    def migration():
+        print('This method is for migration')
+
+        # Deletar de forma Sequencial
+        response = requests.post(self.get_api_call_string(), auth=(Connect.username, Connect.password), verify=False, data = dumps(backup_json))
+        
+
+
+
 class Groupnets(IsiJson):
     """
 
@@ -269,4 +278,3 @@ class Exports(IsiJson):
 
         """
         return '%s-%s.%s.json' % (self.json_attribute_name, self.parents[0], sub_object_id)
-        

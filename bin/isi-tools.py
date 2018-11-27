@@ -101,6 +101,9 @@ def whatChanged():
     """
 
     """
+    
+    # TO DO - o que foi modificado no arquivo
+
     dump_conf_to_stage()
 
     for file_name in os.listdir(STAGE_DIR):
@@ -125,6 +128,21 @@ def whatChanged():
             sys.exit(0)
 
         os.remove(file_path_stage)
+
+def migration():
+
+     zones = Zones()
+     for zone in zones.objects:
+         
+         share = Shares([zone['name']])
+         print(share)
+
+         exports = Exports([zone['name']])
+         print(exports)
+    
+# Pegar todas as zones
+# Pegar todos os exports e shares
+# Deletar de forma Sequencial
 
 
 if __name__ == "__main__":
