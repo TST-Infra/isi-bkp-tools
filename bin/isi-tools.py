@@ -13,6 +13,7 @@ parser.add_argument('-wc','--whatChanged', action="store_true" , help='What has 
 parser.add_argument('-u','--username', type=str, metavar='', required=False, help='Inform username to connect')
 parser.add_argument('-p','--password', type=str, metavar='', required=False, help='Inform password to connect')
 parser.add_argument('-url','--api_url', type=str, metavar='', required=False, help='Inform url to connect')
+parser.add_argument('-m','--migration', action="store_true", help='Migration process')
 args = parser.parse_args()
 
 def dump_conf_to_stage():
@@ -130,20 +131,22 @@ def whatChanged():
         os.remove(file_path_stage)
 
 def migration():
+    """
 
-     zones = Zones()
-     for zone in zones.objects:
-         
-         share = Shares([zone['name']])
-         print(share)
+    """
+    # Abrindo os arquivos para pegar zones, shares e exports
+    for file_name in os.listdir(BACKUP_DIR):
+        
+        b = os.path.join(BACKUP_DIR, file_name)
+        
+        if os.path.isfile(b):
+            
+            with open(b) as backup_fh:
+                file_json = load(backup_fh)
+                print(file_json)
 
-         exports = Exports([zone['name']])
-         print(exports)
-    
-# Pegar todas as zones
-# Pegar todos os exports e shares
-# Deletar de forma Sequencial
-
+        else:
+            print("erro")
 
 if __name__ == "__main__":
     
@@ -157,5 +160,7 @@ if __name__ == "__main__":
         listAll(args.list) 
     elif args.whatChanged:
         whatChanged()
+    elif(args.migration):
+        migration()
     else:
         sys.exit(0)

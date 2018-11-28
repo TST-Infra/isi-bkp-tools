@@ -154,14 +154,16 @@ class IsiJson(object):
                     print('Falha no processo de restore')
                     print(response.text)
 
-    def migration():
-        print('This method is for migration')
-
-        # Deletar de forma Sequencial
-        response = requests.post(self.get_api_call_string(), auth=(Connect.username, Connect.password), verify=False, data = dumps(backup_json))
-        
-
-
+    def migration(self, file_name):
+        # Open Files
+        files = os.path.join(BACKUP_DIR, file_name)
+        if os.path.isfile(files):
+            with open(files) as file_path:
+                print('This method is for migration')
+                # file_json = self.exclude_keys_for_migration(load(file_path))
+                # Deletar de forma Sequencial
+                # response = requests.delete(self.get_api_call_string(), auth=(Connect.username, Connect.password), verify=False, data = dumps(file_json))
+                # Validar se todos foram deletados e se a migração foi realizada
 
 class Groupnets(IsiJson):
     """
