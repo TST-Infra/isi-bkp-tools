@@ -143,7 +143,7 @@ def migration():
             
             with open(b) as backup_fh:
                 file_json = load(backup_fh)
-                print(file_json)
+                print(file_json['id'])
 
         else:
             print("erro")
