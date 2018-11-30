@@ -163,7 +163,9 @@ class IsiJson(object):
                 # Deletar de forma Sequencial
                 # response = requests.delete(self.get_api_call_string(), auth=(Connect.username, Connect.password), verify=False, data = dumps(file_json))
                 # Validar se todos foram deletados e se a migração foi realizada
-                
+                # Se puder me ajudar nessa parte
+
+    
 
 class Groupnets(IsiJson):
     """
@@ -280,3 +282,4 @@ class Exports(IsiJson):
 
         """
         return '%s-%s.%s.json' % (self.json_attribute_name, self.parents[0], sub_object_id)
+        
