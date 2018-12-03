@@ -83,25 +83,30 @@ def restore(file_name):
 def migration():
     
     # Backup de tudo
-    #backup()
+    # backup() 
+    # isi = IsiJson()
+    # isi.migration()
 
     # Compilação do que migrar - nesse caso fiz um dump que contém todas as informações
     for file_name in os.listdir(BACKUP_DIR):
 
         files = os.path.join(BACKUP_DIR, file_name)
 
+        print(files)
+
         if os.path.isfile(files):
             with open(files) as dump_file:
-                
                 
                 # objeto do tipo dict
                 files_json = load(dump_file)
 
                 # Pegar zones, shares e exports
-                # Zones
+                # Zones - pegar zones
                 print(files_json.get('zone'))
 
-
+                # Dump do arquivo
+                print(files_json)
+                
 
 
 if __name__ == "__main__":

@@ -155,16 +155,17 @@ class IsiJson(object):
                     print(response.text)
 
     def migration(self, file_name):
-        # Open Files
+        # Abrir arquivos
         files = os.path.join(BACKUP_DIR, file_name)
         if os.path.isfile(files):
             with open(files) as file_path:
-                print('This method is for migration')
+                print(file_path)
                 # Deletar de forma Sequencial
-                # response = requests.delete(self.get_api_call_string(), auth=(Connect.username, Connect.password), verify=False, data = dumps(file_json))
+                # Deletar groupnet e tudo o que estiver nela
+                # Deletar zones
+                # Remover shares e exports relacionado a zone
+                response = requests.delete(self.get_api_call_string(), auth=(Connect.username, Connect.password), verify=False, data = dumps(file_path))
                 # Validar se todos foram deletados e se a migração foi realizada
-                # Se puder me ajudar nessa parte
-
     
 
 class Groupnets(IsiJson):
@@ -268,7 +269,7 @@ class Exports(IsiJson):
 
     """
     json_attribute_name = 'exports'
-    exclude_keys_for_restore = ['conflicting_paths', 'id', 'unresolved_clients']
+    exclude_keys_for_restore = ['conflicting_paths', 'id', 'unresolved_clients', 'snapshot']
 
 
     def get_api_call_string(self):
