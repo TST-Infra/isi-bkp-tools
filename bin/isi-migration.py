@@ -1,42 +1,81 @@
 #!/usr/bin/python3
 # -*- coding: UTF-8 -*-
 
-from isi_bkp.entities import *
-from json import dumps, load
+from isi_bkp.entities import STAGE_DIR, Groupnets, Zones, Shares, Exports
+from json import load
 from datetime import datetime
 import argparse, os, re, sys, shutil, json
 
+GROUPNET_ORIGEM='groupnet1'
+GROUPNET_DESTINO='groupnet0'
 
-def migration():
-    
-    # Backup de tudo
-    # backup() 
-    # isi = IsiJson()
-    # isi.migration()
+def dump_conf_to_stage():
+    """
+    Carrega os JSONs na area de stage
+    """
+    if not os.path.isdir(STAGE_DIR): 
+        os.mkdir(STAGE_DIR)
 
-    # Compilação do que migrar - nesse caso fiz um dump que contém todas as informações
-    for file_name in os.listdir(BACKUP_DIR):
+    # backup de groupnets e filhos
+    groupnets = Groupnets()
+    groupnets.backup()
 
-        files = os.path.join(BACKUP_DIR, file_name)
+    # backup de zones
+    zones = Zones()
+    zones.backup()
 
-        if os.path.isfile(files):
-            with open(files) as dump_file:
-                
-                # objeto do tipo dict
-                files_json = load(dump_file)
+    # para cada zone, backup de exports e shares
+    for zone in zones.objects:
 
-                # Pegar zones, shares e exports
-                # Zones - pegar zones
-                # print(files_json.get('zone'))
+        share = Shares([zone['name']])
+        share.backup()
 
-                # preparação dos jsons
-                print(files_json)
+        exports = Exports([zone['name']])
+        exports.backup()
 
-def teste():
-    isi = IsiJson()
-    isi.migration()
+def restore_objects_in_original_groupnet(restore_files):
+    """
+    Carrega os objetos na sua conf padrão na Groupnet de origem (restaure controlado)
+    """
 
 
 if __name__ == "__main__":
     #Connect.set_connection_params(username = args.username, password = args.password, api_url = args.api_url)
-    migration()
+    
+    stage_json = dict()    # dict de objetos JSON nos arquivos da area de STAGE (file_name -> json)
+    restore_files = list() # list de arquivos a serem restaurados no advento de uma falha do script
+
+    # dump das configurações para a area de STAGE
+    dump_conf_to_stage()
+
+    # le todos os JSONs na area de stage
+    for file_name in os.listdir(STAGE_DIR):
+
+        file_path = os.path.join(STAGE_DIR, file_name)
+
+        if os.path.isfile(file_path):
+            with open(file_path) as stage_fh:
+                stage_json[file_name] = load(stage_fh)
+
+    # for file_name, json_object in stage_json.items():
+    #     print ('No arquivo %s o ID eh %s' % (file_name, stage_json[file_name]['id']))
+
+    # identificar objetos a serem migrados e criar um novo dict
+    # for file_name, json_object in stage_json.items():
+
+        # verificar se trata-se de groupnet e ignorar caso positivo
+
+        # se for objeto de rede, a groupnet esta no nome do arquivo
+
+        # se for zone, a groupnet esta no objeto
+
+        # se for export ou share, a identificacao sera feita pela zone
+
+    # fazer as alterações para criar os objetos no novo groupnet 
+
+    # remover os objetos na origem 
+
+    # criar os objetos no destino
+
+    # se der merda, restaura tudo
+    restore_objects_in_original_groupnet(restore_files)

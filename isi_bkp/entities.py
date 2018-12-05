@@ -170,6 +170,10 @@ class IsiJson(object):
                     print('Falha no processo de restore')
                     print(response.text)
 
+    def create(self):
+        
+        return 1
+
 
 class Groupnets(IsiJson):
     """
