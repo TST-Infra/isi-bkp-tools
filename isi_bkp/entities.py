@@ -65,6 +65,22 @@ class IsiJson(object):
 
     def url(self):
         return Connect.api_url
+    
+    def migration(self):
+        
+        # Abrir arquivos
+        files = os.path.join(BACKUP_DIR)
+        if os.path.isfile(files):
+            with open(files) as file_path:
+                print(file_path)
+                # Deletar de forma Sequencial
+                # Deletar groupnet e tudo o que estiver nela
+                # Deletar zones
+                # Remover shares e exports relacionado a zone
+                # response = requests.delete(self.get_api_call_string(), auth=(Connect.username, Connect.password), verify=False, data = dumps(file_path))
+                # Validar se todos foram deletados e se a migração foi realizada
+                
+    #def deleteAll(self):
 
     def _exclude_keys_from_json(self, json_object):
         """
@@ -154,19 +170,6 @@ class IsiJson(object):
                     print('Falha no processo de restore')
                     print(response.text)
 
-    def migration(self, file_name):
-        # Abrir arquivos
-        files = os.path.join(BACKUP_DIR, file_name)
-        if os.path.isfile(files):
-            with open(files) as file_path:
-                print(file_path)
-                # Deletar de forma Sequencial
-                # Deletar groupnet e tudo o que estiver nela
-                # Deletar zones
-                # Remover shares e exports relacionado a zone
-                response = requests.delete(self.get_api_call_string(), auth=(Connect.username, Connect.password), verify=False, data = dumps(file_path))
-                # Validar se todos foram deletados e se a migração foi realizada
-                
 
 class Groupnets(IsiJson):
     """
