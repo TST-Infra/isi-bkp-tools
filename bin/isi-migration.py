@@ -61,15 +61,29 @@ if __name__ == "__main__":
     #     print ('No arquivo %s o ID eh %s' % (file_name, stage_json[file_name]['id']))
 
     # identificar objetos a serem migrados e criar um novo dict
-    # for file_name, json_object in stage_json.items():
+    
+    for file_name, json_object in stage_json.items():
+        m = re.search(r'^(\w+)\-([\w\.\-]+)\.[\w\.\-_\d]+.json', file_name)
+        match = m.group(1)
+        type_object = m.group(2).split('.')
+        print(type_object)
+
 
         # verificar se trata-se de groupnet e ignorar caso positivo
-
-        # se for objeto de rede, a groupnet esta no nome do arquivo
+        if(type_object == "groupnets"):
+            print('testando: '+type_object)
 
         # se for zone, a groupnet esta no objeto
+        elif(type_object == "zones"):
+            print('groupnet is on object')
 
         # se for export ou share, a identificacao sera feita pela zone
+        elif(type_object == "exports" or type_object == "share"):
+            print('identification by zone')
+
+        # se for objeto de rede, a groupnet esta no nome do arquivo
+        else:
+            print('its in the file name')
 
     # fazer as alterações para criar os objetos no novo groupnet 
 
