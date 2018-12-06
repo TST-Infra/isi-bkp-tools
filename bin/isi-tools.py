@@ -76,12 +76,20 @@ def restore(file_name):
     """
 
     """
-    m = re.search(r'^(\w+)\-([\w\.\-]+)\.[\w\.\-_\d]+.json', file_name)
-    
-    if m:
-        tipo = m.group(1)
-        parents = m.group(2).split('.')
+    # expressao regular adaptada para o caso de objetos que possuem parents
+    m_parents = re.search(r'^(\w+)\-([\w\.\-]+)\.[\w\.\-_\d]+.json', file_name)
+
+    # expressao regular adaptada para o caso de objetos que nao possuem parents (zones e groupnets)
+    m_no_parents = re.search(r'^(\w+)\-[\w\.\-_\d]+.json', file_name) 
+
+    if m_parents:
+        tipo = m_parents.group(1)
+        parents = m_parents.group(2).split('.')
         isiJsonObject = globals()[CLASS_NAMES[tipo]](parents)
+        isiJsonObject.restore(file_name)
+    elif m_no_parents:
+        tipo = m_no_parents.group(1)
+        isiJsonObject = globals()[CLASS_NAMES[tipo]]()
         isiJsonObject.restore(file_name)
 
 def listAll(filter = 'all'):
