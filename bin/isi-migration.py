@@ -39,6 +39,7 @@ def restore_objects_in_original_groupnet(restore_files):
     Carrega os objetos na sua conf padrão na Groupnet de origem (restaure controlado)
     """
 
+
 def nested_dict(n, type):
     """ 
     Cria dicionario multidimensional
@@ -48,12 +49,18 @@ def nested_dict(n, type):
     else:
         return defaultdict(lambda: nested_dict(n-1, type))
 
+#def has_parent():
+
+#def without_parent():
+
+
 if __name__ == "__main__":
     #Connect.set_connection_params(username = args.username, password = args.password, api_url = args.api_url)
     
     stage_json = dict()    # dict de objetos JSON nos arquivos da area de STAGE (file_name -> json)
     new_objects = nested_dict(1, list)
     restore_dict = nested_dict(1, list)
+    create_dict = nested_dict(1, list)
 
     groupnet_zones = list()
 
@@ -75,7 +82,7 @@ if __name__ == "__main__":
     # identificar objetos a serem migrados e criar um novo dict
     
     for file_name, json_object in stage_json.items():
-        
+        # caso não tenha parent
         m_no_parents = re.search(r'^(\w+)\-[\w\.\-_\d]+.json', file_name) 
         
         if m_no_parents:
@@ -90,9 +97,11 @@ if __name__ == "__main__":
                 new_objects[type_object].append(json_object)
                 restore_dict[type_object].append(file_name)
 
+                # Dados da zone com groupnet alterado
+                print(dumps(json_object))
 
     for file_name, json_object in stage_json.items():
-        
+        # caso tenha parent
         m_parents = re.search(r'^(\w+)\-([\w\.\-]+)\.[\w\.\-_\d]+.json', file_name)
         
         if m_parents:
@@ -105,6 +114,8 @@ if __name__ == "__main__":
                     new_objects[type_object].append(json_object)
                     restore_dict[type_object].append(file_name)
 
+                    print(dumps(json_object))
+
             # se for objeto de rede, a groupnet esta no nome do arquivo
             elif type_object in ['subnets', 'pools', 'rules']:
                 if parents[0] == GROUPNET_ORIGEM:
@@ -112,14 +123,14 @@ if __name__ == "__main__":
                     new_objects[type_object].append(json_object)
                     restore_dict[type_object].append(file_name)
 
-    print(dumps(new_objects))  
-
-
     # fazer as alterações para criar os objetos no novo groupnet 
 
     # remover os objetos na origem 
+    # isi = IsiJson()
+    # isi.delete(json_object)
 
     # criar os objetos no destino
+    # isi.create(json_object)
 
     # se der merda, restaura tudo
     # restore_objects_in_original_groupnet(restore_files)

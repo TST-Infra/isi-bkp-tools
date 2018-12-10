@@ -65,22 +65,6 @@ class IsiJson(object):
 
     def url(self):
         return Connect.api_url
-    
-    def migration(self):
-        
-        # Abrir arquivos
-        files = os.path.join(BACKUP_DIR)
-        if os.path.isfile(files):
-            with open(files) as file_path:
-                print(file_path)
-                # Deletar de forma Sequencial
-                # Deletar groupnet e tudo o que estiver nela
-                # Deletar zones
-                # Remover shares e exports relacionado a zone
-                # response = requests.delete(self.get_api_call_string(), auth=(Connect.username, Connect.password), verify=False, data = dumps(file_path))
-                # Validar se todos foram deletados e se a migração foi realizada
-                
-    #def deleteAll(self):
 
     def _exclude_keys_from_json(self, json_object):
         """
@@ -170,9 +154,28 @@ class IsiJson(object):
                     print('Falha no processo de restore')
                     print(response.text)
 
-    def create(self):
-        
-        return 1
+    # Método que faz o processo de criação dos arquivos json
+    def create(self, data):
+
+        response = requests.put(self.get_api_call_string(), auth=(Connect.username, Connect.password, verify=False), data = dumps(data))
+        if response.status_code == 201:
+            print('201 Created')
+        else:
+            print('error 404')
+            print(response.text)
+
+
+    # Requisição para processo de deleção dos arquivos jsons
+    def delete(self, file_json):
+
+        # os arquivos tem que ser deletados em ordem, e caso haja qualquer erro, o processo de bkp deve acontecer
+
+        response = requests.delete(self.get_api_call_string(), auth=(Connect.username, Connect.password), verify=False, data = dumps(file_json))
+        if response.status_code == 204:
+            print('Arquivos deletados com sucesso')
+        else:
+            print('Falha ao deletar')
+            print(response.text)
 
 
 class Groupnets(IsiJson):
