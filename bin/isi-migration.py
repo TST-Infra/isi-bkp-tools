@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 # -*- coding: UTF-8 -*-
 
-from isi_bkp.entities import STAGE_DIR, Groupnets, Zones, Shares, Exports
+from isi_bkp.entities import STAGE_DIR, CLASS_NAMES, Groupnets, Zones, Shares, Exports
 from json import load, dumps
 from datetime import datetime
 from collections import defaultdict
@@ -59,8 +59,8 @@ if __name__ == "__main__":
     #Connect.set_connection_params(username = args.username, password = args.password, api_url = args.api_url)
     
     stage_json = dict()    # dict de objetos JSON nos arquivos da area de STAGE (file_name -> json)
-    new_objects = nested_dict(1, list)
-    restore_dict = nested_dict(1, list)
+    new_objects = nested_dict(1, list) # dict de objetos JSON modificados para a carga (object_type -> json)
+    restore_dict = nested_dict(1, list) # dict de files para a restauracao (object_type -> file_name)
 
     create_dict = nested_dict(1, list)
 
@@ -81,7 +81,7 @@ if __name__ == "__main__":
     # for file_name, json_object in stage_json.items():
     #     print ('No arquivo %s o ID eh %s' % (file_name, stage_json[file_name]['id']))
 
-    # identificar objetos a serem migrados e criar um novo dict
+    # identificar objetos a serem migrados e criar um novo dict, jah com os dados alterados
     
     for file_name, json_object in stage_json.items():
         # caso não tenha parent
@@ -127,12 +127,40 @@ if __name__ == "__main__":
                     new_objects[type_object].append(json_object)
                     restore_dict[type_object].append(file_name)
 
-    # fazer as alterações para criar os objetos no novo groupnet
-    # dumps(json_object) - Armazena todos os arquivos já alterados
-
     # remover os objetos na origem 
     # isi = IsiJson()
     # isi.delete(json_object)
+
+    for object_type in ['shares', 'exports', 'zones', 'rules', 'pools', 'subnets']:
+        
+        for file_name in restore_dict[object_type]:
+
+            isiJsonObject = None
+            id = None
+
+            if object_type == 'zones':
+                
+                m = re.search(r'^(\w+)\-([\w\.\-_\d]+).json', file_name)
+                
+                if m:
+                    tipo = m.group(1)
+                    id = m.group(2)
+                    isiJsonObject = globals()[CLASS_NAMES[tipo]]()
+                    
+            else:
+                m = re.search(r'^(\w+)\-([\w\.\-]+)\.([\w\.\-_\d]+).json', file_name)
+
+                if m:
+                    tipo = m.group(1)
+                    parents = m.group(2).split('.')
+                    id = m.group(3)
+                    isiJsonObject = globals()[CLASS_NAMES[tipo]](parents)
+                    
+            if isiJsonObject:
+                isiJsonObject.delete(id) # tratar excecao se houver erro no delete
+            else:
+                # TODO gerar excecao se nao houver o objeto criado
+                None
 
     # criar os objetos no destino
     # isi.create(json_object)

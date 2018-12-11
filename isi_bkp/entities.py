@@ -11,6 +11,10 @@ API_CALLS = {
     'exports': '/4/protocols/nfs/exports?zone=%s',
 }
 
+API_CALLS_DELETE = {
+    'exports': '/4/protocols/nfs/exports/%s?zone=%s',
+}
+
 CLASS_NAMES = {
     'groupnets': 'Groupnets',
     'subnets': 'Subnets',
@@ -134,6 +138,12 @@ class IsiJson(object):
         """
         return Connect.api_url + API_CALLS[self.json_attribute_name]
 
+    def get_api_delete_call_string(self, *args):
+        """
+
+        """
+        return Connect.api_url + API_CALLS_DELETE[self.json_attribute_name]
+
     def restore(self, backup_file_name):
         """
 
@@ -157,7 +167,8 @@ class IsiJson(object):
     # Método que faz o processo de criação dos arquivos json
     def create(self, data):
 
-        response = requests.put(self.get_api_call_string(), auth=(Connect.username, Connect.password, verify=False), data = dumps(data))
+        response = requests.post(self.get_api_call_string(), auth=(Connect.username, Connect.password), verify=False, data = dumps(data))
+        
         if response.status_code == 201:
             print('201 Created')
         else:
@@ -166,11 +177,11 @@ class IsiJson(object):
 
 
     # Requisição para processo de deleção dos arquivos jsons
-    def delete(self, file_json):
+    def delete(self, id):
 
         # os arquivos tem que ser deletados em ordem, e caso haja qualquer erro, o processo de bkp deve acontecer
 
-        response = requests.delete(self.get_api_call_string(), auth=(Connect.username, Connect.password), verify=False, data = dumps(file_json))
+        response = requests.delete(self.get_api_delete_call_string(id), auth=(Connect.username, Connect.password), verify=False)
         if response.status_code == 204:
             print('Arquivos deletados com sucesso')
         else:
@@ -268,6 +279,12 @@ class Shares(IsiJson):
         """
         return super().get_api_call_string() % (self.parents[0])
 
+    def get_api_delete_call_string(self, id):
+        """
+
+        """
+        return super().get_api_delete_call_string() % (id, self.parents[0])
+
     def generate_dump_name(self, sub_object_id):
         """
 
@@ -287,6 +304,12 @@ class Exports(IsiJson):
 
         """
         return super().get_api_call_string() % (self.parents[0])
+    
+    def get_api_delete_call_string(self, id):
+        """
+
+        """
+        return super().get_api_delete_call_string() % (id, self.parents[0])
 
     def generate_dump_name(self, sub_object_id):
         """
