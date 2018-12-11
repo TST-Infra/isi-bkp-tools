@@ -40,6 +40,7 @@ def restore_objects_in_original_groupnet(restore_files):
     """
 
 
+
 def nested_dict(n, type):
     """ 
     Cria dicionario multidimensional
@@ -60,6 +61,7 @@ if __name__ == "__main__":
     stage_json = dict()    # dict de objetos JSON nos arquivos da area de STAGE (file_name -> json)
     new_objects = nested_dict(1, list)
     restore_dict = nested_dict(1, list)
+
     create_dict = nested_dict(1, list)
 
     groupnet_zones = list()
@@ -99,6 +101,7 @@ if __name__ == "__main__":
 
                 # Dados da zone com groupnet alterado
                 print(dumps(json_object))
+                #print('zone')
 
     for file_name, json_object in stage_json.items():
         # caso tenha parent
@@ -115,6 +118,7 @@ if __name__ == "__main__":
                     restore_dict[type_object].append(file_name)
 
                     print(dumps(json_object))
+                    #print('exports e shares')
 
             # se for objeto de rede, a groupnet esta no nome do arquivo
             elif type_object in ['subnets', 'pools', 'rules']:
@@ -123,7 +127,8 @@ if __name__ == "__main__":
                     new_objects[type_object].append(json_object)
                     restore_dict[type_object].append(file_name)
 
-    # fazer as alterações para criar os objetos no novo groupnet 
+    # fazer as alterações para criar os objetos no novo groupnet
+    # dumps(json_object) - Armazena todos os arquivos já alterados
 
     # remover os objetos na origem 
     # isi = IsiJson()
