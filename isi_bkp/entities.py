@@ -173,7 +173,7 @@ class IsiJson(object):
         else:
             print('error 404')
             print(response.text)
-
+            
     def delete(self, id):
         
         response = requests.delete(self.get_api_delete_call_string(id), auth=(Connect.username, Connect.password), verify=False)

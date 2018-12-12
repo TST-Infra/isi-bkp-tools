@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 # -*- coding: UTF-8 -*-
 
-from isi_bkp.entities import BACKUP_DIR, STAGE_DIR, CLASS_NAMES, Groupnets, Zones, Shares, Exports
+from isi_bkp.entities import Groupnets, Zones, Shares, Exports, Connect, Pools, Rules, STAGE_DIR, BACKUP_DIR, CLASS_NAMES
 from json import load, dumps
 from datetime import datetime
 from collections import defaultdict
@@ -34,30 +34,31 @@ def dump_conf_to_stage():
         exports = Exports([zone['name']])
         exports.backup()
 
-def restore_objects_in_original_groupnet():
+def restore_all():
+    
     """
-    Carrega os objetos na sua conf padrão na Groupnet de origem (restaure controlado)
+    Restaura tudo caso dê algo de errado
     """
-
+    
     for file_name in os.listdir(BACKUP_DIR):
-        
+
         m_no_parents = re.search(r'^(\w+)\-[\w\.\-_\d]+.json', file_name) 
         m_parents = re.search(r'^(\w+)\-([\w\.\-]+)\.[\w\.\-_\d]+.json', file_name)
         
-        if m_no_parents:
+        if m_parents:
+            tipo = m_parents.group(1)
+            parents = m_parents.group(2).split('.')
+            #isiJsonObject = globals()[CLASS_NAMES[tipo]](parents)
+            #isiJsonObject.restore(file_name)
+        elif m_no_parents:
             tipo = m_no_parents.group(1)
-        if tipo == 'groupnets':
-                isiJsonObject = globals()[CLASS_NAMES[tipo]]()
-                isiJsonObject.restore(file_name)
-            #else:
-            #    if m_parents:
-            #        tipo = m_parents.group(1)
-            #        if tipo == "subnets":
-            #            print(tipo)
-            #            parents = m_parents.group(2).split('.')
-            #            isiJsonObject = globals()[CLASS_NAMES[tipo]](parents)
-            #            isiJsonObject.restore(file_name)
+            isiJsonObject = globals()[CLASS_NAMES[tipo]]()
+            isiJsonObject.restore(file_name)
 
+def restore_objects_in_original_groupnet(original_groupnet):
+    """
+    Carrega os objetos na sua conf padrão na Groupnet de origem (restaure controlado)
+    """
 
 def nested_dict(n, type):
     """ 
@@ -181,4 +182,4 @@ if __name__ == "__main__":
 #                None
 #                
 #    # se der merda, restaura tudo
-restore_objects_in_original_groupnet()
+restore_all()
