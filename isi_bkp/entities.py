@@ -164,7 +164,6 @@ class IsiJson(object):
                     print('Falha no processo de restore')
                     print(response.text)
 
-    # Método que faz o processo de criação dos arquivos json
     def create(self, data):
 
         response = requests.post(self.get_api_call_string(), auth=(Connect.username, Connect.password), verify=False, data = dumps(data))
@@ -175,12 +174,8 @@ class IsiJson(object):
             print('error 404')
             print(response.text)
 
-
-    # Requisição para processo de deleção dos arquivos jsons
     def delete(self, id):
-
-        # os arquivos tem que ser deletados em ordem, e caso haja qualquer erro, o processo de bkp deve acontecer
-
+        
         response = requests.delete(self.get_api_delete_call_string(id), auth=(Connect.username, Connect.password), verify=False)
         if response.status_code == 204:
             print('Arquivos deletados com sucesso')
@@ -296,7 +291,7 @@ class Exports(IsiJson):
 
     """
     json_attribute_name = 'exports'
-    exclude_keys_for_restore = ['conflicting_paths', 'id', 'unresolved_clients']
+    exclude_keys_for_restore = ['conflicting_paths', 'id', 'unresolved_clients', 'snapshot']
 
 
     def get_api_call_string(self):
