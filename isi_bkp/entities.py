@@ -12,7 +12,13 @@ API_CALLS = {
 }
 
 API_CALLS_DELETE = {
-    'exports': '/4/protocols/nfs/exports/%s?zone=%s',
+    'groupnets': '/3/network/groupnets',
+    'subnets': '/3/network/groupnets/%s/subnets',
+    'pools': '/3/network/groupnets/%s/subnets/%s/pools',
+    'rules': '/3/network/groupnets/%s/subnets/%s/pools/%s/rules',
+    'zones': '/3/zones',
+    'shares': '/4/protocols/smb/shares?zone=%s',
+    'exports': '/4/protocols/nfs/exports?zone=%s',
 }
 
 CLASS_NAMES = {
@@ -174,11 +180,11 @@ class IsiJson(object):
             print('201 Created')
         else:
             print('error 404')
-            print(response.text)
             
     def delete(self, id):
         
         response = requests.delete(self.get_api_delete_call_string(id), auth=(Connect.username, Connect.password), verify=False)
+
         if response.status_code == 204:
             print('Arquivos deletados com sucesso')
         else:

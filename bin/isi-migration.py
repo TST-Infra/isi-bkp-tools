@@ -150,38 +150,42 @@ if __name__ == "__main__":
                     new_objects[object_type].append(json_object)
                     restore_dict[object_type].append(file_name)
 
-    # remover os objetos na origem 
+    # remover os objetos na origem
 
-#    for object_type in ['shares', 'exports', 'zones', 'rules', 'pools', 'subnets']:
-#        
-#        for file_name in restore_dict[object_type]:
-#
-#            isiJsonObject = None
-#            id = None
-#
-#            if object_type == 'zones':
-#                
-#                m = re.search(r'^(\w+)\-([\w\.\-_\d]+).json', file_name)
-#                
-#                if m:
-#                    tipo = m.group(1)
-#                    id = m.group(2)
-#                    isiJsonObject = globals()[CLASS_NAMES[tipo]]()
-#                    
-#            else:
-#                m = re.search(r'^(\w+)\-([\w\.\-]+)\.([\w\.\-_\d]+).json', file_name)
-#
-#                if m:
-#                    tipo = m.group(1)
-#                    parents = m.group(2).split('.')
-#                    id = m.group(3)
-#                    isiJsonObject = globals()[CLASS_NAMES[tipo]](parents)
-#                    
-#            if isiJsonObject:
-#                isiJsonObject.delete(id) # tratar excecao se houver erro no delete
-#            else:
-#                # TODO gerar excecao se nao houver o objeto criado
-#                None
+    for object_type in ['pools','shares','exports','zones']:
+        
+        #'shares','exports','zones', 'rules', 'pools', 'subnets'
+        
+        for file_name in restore_dict[object_type]:
+
+            isiJsonObject = None
+            id = None
+
+            if object_type == 'zones':
+                
+                m = re.search(r'^(\w+)\-([\w\.\-_\d]+).json', file_name)
+                
+                if m:
+                    tipo = m.group(1)
+                    id = m.group(2)
+                    isiJsonObject = globals()[CLASS_NAMES[tipo]]()
+                    
+            else:
+                m = re.search(r'^(\w+)\-([\w\.\-]+)\.([\w\.\-_\d]+).json', file_name)
+
+                if m:
+                    tipo = m.group(1)
+                    parents = m.group(2).split('.')
+                    id = m.group(3)
+                    isiJsonObject = globals()[CLASS_NAMES[tipo]](parents)
+                    
+            if isiJsonObject:
+                print(type(isiJsonObject))
+                isiJsonObject.delete(id)
+            else:
+                None
+                #gerar excecao se nao houver o objeto criado
+                #restore_all(restore_dict)
 
 #    # criar os objetos no destino
 #    for obj in ['shares', 'exports', 'zones', 'rules', 'pools', 'subnets']:
@@ -190,9 +194,9 @@ if __name__ == "__main__":
 #            isiJsonObject = None
 #
 #            if isiJsonObject:
-#                isiJsonObject.create(new_objects) # tratar excecao se houver erro no delete
+#                isiJsonObject.create(new_objects) # tratar excecao se houver erro no create
 #            else:
 #                None
 #                
 #    # se der merda, restaura tudo
-restore_all(restore_dict)
+#restore_all(restore_dict)
