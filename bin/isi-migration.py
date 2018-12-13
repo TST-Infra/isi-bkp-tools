@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 # -*- coding: UTF-8 -*-
 
-from isi_bkp.entities import Groupnets, Zones, Shares, Exports, Connect, Pools, Rules, STAGE_DIR, BACKUP_DIR, CLASS_NAMES
+from isi_bkp.entities import Groupnets, Zones, Shares, Exports, Connect, Subnets, Pools, Rules, STAGE_DIR, BACKUP_DIR, CLASS_NAMES
 from json import load, dumps
 from datetime import datetime
 from collections import defaultdict
@@ -34,26 +34,39 @@ def dump_conf_to_stage():
         exports = Exports([zone['name']])
         exports.backup()
 
-def restore_all():
+def restore_all(restore_file):
     
     """
-    Restaura tudo caso dê algo de errado
+    Restaura tudo caso ocorra erro - OK
     """
-    
-    for file_name in os.listdir(BACKUP_DIR):
 
-        m_no_parents = re.search(r'^(\w+)\-[\w\.\-_\d]+.json', file_name) 
-        m_parents = re.search(r'^(\w+)\-([\w\.\-]+)\.[\w\.\-_\d]+.json', file_name)
-        
-        if m_parents:
-            tipo = m_parents.group(1)
-            parents = m_parents.group(2).split('.')
-            #isiJsonObject = globals()[CLASS_NAMES[tipo]](parents)
-            #isiJsonObject.restore(file_name)
-        elif m_no_parents:
-            tipo = m_no_parents.group(1)
-            isiJsonObject = globals()[CLASS_NAMES[tipo]]()
-            isiJsonObject.restore(file_name)
+    for object_type in ['zones', 'exports', 'shares','subnets', 'pools', 'rules']:
+
+        for file_name in restore_file[object_type]:
+            print(file_name)
+
+            isiJsonObject = None
+            
+            if object_type == 'zones':
+                
+                m = re.search(r'^(\w+)\-([\w\.\-_\d]+).json', file_name)
+                
+                if m:
+                    tipo = m.group(1)
+                    isiJsonObject = globals()[CLASS_NAMES[tipo]]()
+            else:
+
+                m = re.search(r'^(\w+)\-([\w\.\-]+)\.([\w\.\-_\d]+).json', file_name)
+                
+                if m:
+                    tipo = m.group(1)
+                    parents = m.group(2).split('.')
+                    isiJsonObject = globals()[CLASS_NAMES[tipo]](parents)
+
+            if isiJsonObject:
+                isiJsonObject.restore(file_name)
+            else:
+                print('Erro')
 
 def restore_objects_in_original_groupnet(original_groupnet):
     """
@@ -105,41 +118,41 @@ if __name__ == "__main__":
         m_no_parents = re.search(r'^(\w+)\-[\w\.\-_\d]+.json', file_name) 
         
         if m_no_parents:
-            type_object = m_no_parents.group(1)
+            object_type = m_no_parents.group(1)
         
             # se for zone, a groupnet esta no objeto
-            if type_object == "zones" and json_object['groupnet'] == GROUPNET_ORIGEM:
+            if object_type == "zones" and json_object['groupnet'] == GROUPNET_ORIGEM:
                 
                 groupnet_zones.append(json_object['name'])
                 json_object['groupnet'] = GROUPNET_DESTINO
 
-                new_objects[type_object].append(json_object)
-                restore_dict[type_object].append(file_name)
+                new_objects[object_type].append(json_object)
+                restore_dict[object_type].append(file_name)
 
     for file_name, json_object in stage_json.items():
         # caso tenha parent
         m_parents = re.search(r'^(\w+)\-([\w\.\-]+)\.[\w\.\-_\d]+.json', file_name)
         
         if m_parents:
-            type_object = m_parents.group(1)
+            object_type = m_parents.group(1)
             parents = m_parents.group(2).split('.')
             
             # se for export ou share, a identificacao sera feita pela zone
-            if type_object in ["exports", "shares"]:
+            if object_type in ["exports", "shares"]:
                 if parents[0] in groupnet_zones: 
-                    new_objects[type_object].append(json_object)
-                    restore_dict[type_object].append(file_name)
+                    new_objects[object_type].append(json_object)
+                    restore_dict[object_type].append(file_name)
 
             # se for objeto de rede, a groupnet esta no nome do arquivo
-            elif type_object in ['subnets', 'pools', 'rules']:
+            elif object_type in ['subnets', 'pools', 'rules']:
                 if parents[0] == GROUPNET_ORIGEM:
                     json_object['id'] = json_object['id'].replace(GROUPNET_ORIGEM, GROUPNET_DESTINO)
-                    new_objects[type_object].append(json_object)
-                    restore_dict[type_object].append(file_name)
+                    new_objects[object_type].append(json_object)
+                    restore_dict[object_type].append(file_name)
 
     # remover os objetos na origem 
 
-#    for object_type in ['shares']:
+#    for object_type in ['shares', 'exports', 'zones', 'rules', 'pools', 'subnets']:
 #        
 #        for file_name in restore_dict[object_type]:
 #
@@ -182,4 +195,4 @@ if __name__ == "__main__":
 #                None
 #                
 #    # se der merda, restaura tudo
-restore_all()
+restore_all(restore_dict)

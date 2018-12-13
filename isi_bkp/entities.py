@@ -21,6 +21,8 @@ CLASS_NAMES = {
     'pools': 'Pools',
     'rules': 'Rules',
     'zones': 'Zones',
+    'exports': 'Exports',
+    'shares': 'Shares',
 }
 
 STAGE_DIR = '/opt/isi-bkp-tools/stage'
@@ -121,12 +123,12 @@ class IsiJson(object):
         for object_data in self.objects:
             
             object_name = object_data['name']
-
+            
             for child_attribute in self.children:
 
                 if len(object_data[child_attribute]):
                     
-                    parents = self.parents
+                    parents = list(self.parents)
                     parents.append(object_name)
 
                     child_object = globals()[CLASS_NAMES[child_attribute]](parents)
