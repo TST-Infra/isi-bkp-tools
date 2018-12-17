@@ -37,7 +37,7 @@ def dump_conf_to_stage():
 def restore_all(restore_file):
     
     """
-    Restaura tudo caso ocorra erro - OK
+    Restaura tudo caso ocorra erro
     """
 
     for object_type in ['zones', 'exports', 'shares','subnets', 'pools', 'rules']:
@@ -90,6 +90,7 @@ if __name__ == "__main__":
     stage_json = dict()    # dict de objetos JSON nos arquivos da area de STAGE (file_name -> json)
     new_objects = nested_dict(1, list) # dict de objetos JSON modificados para a carga (object_type -> json)
     restore_dict = nested_dict(1, list) # dict de files para a restauracao (object_type -> file_name)
+    shares_zone_map = dict()
 
     groupnet_zones = list()
 
@@ -140,6 +141,9 @@ if __name__ == "__main__":
                     new_objects[object_type].append(json_object)
                     restore_dict[object_type].append(file_name)
 
+                    if object_type == 'shares':
+                        shares_zone_map[json_object['path']] = parents[0]
+
             # se for objeto de rede, a groupnet esta no nome do arquivo
             elif object_type in ['subnets', 'pools', 'rules']:
                 if parents[0] == GROUPNET_ORIGEM:
@@ -184,14 +188,36 @@ if __name__ == "__main__":
 
 
     # criar os objetos no destino
-    for obj in ['zones','shares','exports','subnets','pools','rules']:
 
-        # Ordem antiga ['shares', 'exports', 'zones', 'rules', 'pools', 'subnets'];
-        
-        for json_file in new_objects[obj]:
+    for object_type in ['zones','shares','exports','subnets','pools','rules']:
 
-            print(json_file)
-            #print(dumps(json_file))
+        for json_object in new_objects[object_type]:
 
-            # o arquivo json a ser mandado, já deve estar atualizado
-            #create(json_file)
+            if object_type == 'shares':
+                zone_name = shares_zone_map[json_object['path']]
+                shares = Shares([zone_name])
+                shares.create(json_object)
+            elif object_type == 'exports':
+                zone_name = json_object['zone']
+                exports = Exports([zone_name])
+                exports.create(json_object)
+            elif object_type == 'zones':
+                zone_id = json_object['id']
+                zone = Zones()
+                zone.create(json_object)
+            elif object_type == 'subnets':
+                id_sub = (json_object['id'])
+                m = re.search(r'^(\w+)\.([\w\.\-]+)', id_sub )
+                parents = m.group(1)
+                subnet = Subnets([parents])
+                subnet.create(json_object)
+            elif object_type == 'pools':
+                id_pool = (json_object['id'])
+                m = re.search(r'^(\w+)\.(\w+)', id_pool )
+                groupnet = m.group(1)
+                subnet = m.group(2)
+                # pool = Pools([groupnet], [subnet])
+                # pool.create(json_object)
+                
+    # restaurar tudo
+    # restore_all(restore_dict)

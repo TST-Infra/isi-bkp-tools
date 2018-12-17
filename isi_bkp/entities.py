@@ -174,7 +174,9 @@ class IsiJson(object):
 
     def create(self, data):
 
-        response = requests.post(self.get_api_call_string(), auth=(Connect.username, Connect.password), verify=False, data = dumps(data))
+        clean_data = self._exclude_keys_from_json(data)
+
+        response = requests.post(self.get_api_call_string(), auth=(Connect.username, Connect.password), verify=False, data = dumps(clean_data))
         
         if response.status_code == 201:
             print('201 Created')
