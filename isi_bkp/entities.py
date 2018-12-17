@@ -319,4 +319,3 @@ class Exports(IsiJson):
 
         """
         return '%s-%s.%s.json' % (self.json_attribute_name, self.parents[0], sub_object_id)
-        

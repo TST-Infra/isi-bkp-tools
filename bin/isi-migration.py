@@ -82,12 +82,9 @@ def nested_dict(n, type):
     else:
         return defaultdict(lambda: nested_dict(n-1, type))
 
-#def has_parent():
-
-#def without_parent():
-
 
 if __name__ == "__main__":
+
     #Connect.set_connection_params(username = args.username, password = args.password, api_url = args.api_url)
     
     stage_json = dict()    # dict de objetos JSON nos arquivos da area de STAGE (file_name -> json)
@@ -152,51 +149,49 @@ if __name__ == "__main__":
 
     # remover os objetos na origem
 
-    for object_type in ['pools','shares','exports','zones']:
-        
-        #'shares','exports','zones', 'rules', 'pools', 'subnets'
-        
-        for file_name in restore_dict[object_type]:
-
-            isiJsonObject = None
-            id = None
-
-            if object_type == 'zones':
-                
-                m = re.search(r'^(\w+)\-([\w\.\-_\d]+).json', file_name)
-                
-                if m:
-                    tipo = m.group(1)
-                    id = m.group(2)
-                    isiJsonObject = globals()[CLASS_NAMES[tipo]]()
-                    
-            else:
-                m = re.search(r'^(\w+)\-([\w\.\-]+)\.([\w\.\-_\d]+).json', file_name)
-
-                if m:
-                    tipo = m.group(1)
-                    parents = m.group(2).split('.')
-                    id = m.group(3)
-                    isiJsonObject = globals()[CLASS_NAMES[tipo]](parents)
-                    
-            if isiJsonObject:
-                print(type(isiJsonObject))
-                isiJsonObject.delete(id)
-            else:
-                None
-                #gerar excecao se nao houver o objeto criado
-                #restore_all(restore_dict)
-
-#    # criar os objetos no destino
-#    for obj in ['shares', 'exports', 'zones', 'rules', 'pools', 'subnets']:
-#        
-#        for file_name in new_objects[obj]:
-#            isiJsonObject = None
+#    for object_type in ['pools','shares','exports','zones','subnets']:
 #
+#        for file_name in restore_dict[object_type]:
+#
+#            isiJsonObject = None
+#            id = None
+#
+#            if object_type == 'zones':
+#                
+#                m = re.search(r'^(\w+)\-([\w\.\-_\d]+).json', file_name)
+#                
+#                if m:
+#                    tipo = m.group(1)
+#                    id = m.group(2)
+#                    isiJsonObject = globals()[CLASS_NAMES[tipo]]()
+#                    
+#            else:
+#                m = re.search(r'^(\w+)\-([\w\.\-]+)\.([\w\.\-_\d]+).json', file_name)
+#
+#                if m:
+#                    tipo = m.group(1)
+#                    parents = m.group(2).split('.')
+#                    id = m.group(3)
+#                    isiJsonObject = globals()[CLASS_NAMES[tipo]](parents)
+#                    
 #            if isiJsonObject:
-#                isiJsonObject.create(new_objects) # tratar excecao se houver erro no create
+#                print(type(isiJsonObject))
+#                isiJsonObject.delete(id)
 #            else:
 #                None
-#                
-#    # se der merda, restaura tudo
-#restore_all(restore_dict)
+#                #gerar excecao se nao houver o objeto criado
+#                #restore_all(restore_dict)
+
+
+    # criar os objetos no destino
+    for obj in ['zones','shares','exports','subnets','pools','rules']:
+
+        # Ordem antiga ['shares', 'exports', 'zones', 'rules', 'pools', 'subnets'];
+        
+        for json_file in new_objects[obj]:
+
+            print(json_file)
+            #print(dumps(json_file))
+
+            # o arquivo json a ser mandado, já deve estar atualizado
+            #create(json_file)
