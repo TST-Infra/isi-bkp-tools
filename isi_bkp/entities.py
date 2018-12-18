@@ -14,7 +14,7 @@ API_CALLS = {
 API_CALLS_DELETE = {
     'groupnets': '/3/network/groupnets',
     'subnets': '/3/network/groupnets/%s/subnets',
-    'pools': '/3/network/groupnets/%s/subnets/%s/pools',
+    'pools': '/3/network/groupnets/%s/subnets/%s/pools/%s',
     'rules': '/3/network/groupnets/%s/subnets/%s/pools/%s/rules',
     'zones': '/3/zones',
     'shares': '/4/protocols/smb/shares?zone=%s',
@@ -216,6 +216,13 @@ class Subnets(IsiJson):
         """
         return super().get_api_call_string() % (self.parents[0])
 
+    def get_api_delete_call_string(self, id):
+        """
+    
+        """
+        return super().get_api_delete_call_string() % (self.parents[0], id)
+    
+
 class Pools(IsiJson):
     """
 
@@ -229,6 +236,12 @@ class Pools(IsiJson):
 
         """
         return super().get_api_call_string() % (self.parents[0], self.parents[1])
+    
+    def get_api_delete_call_string(self, id):
+        """
+    
+        """
+        return super().get_api_delete_call_string() % (self.parents[0], self.parents[1], id)
 
 class Rules(IsiJson):
     """
@@ -243,6 +256,12 @@ class Rules(IsiJson):
 
         """
         return super().get_api_call_string() % (self.parents[0], self.parents[1], self.parents[2])
+
+    def get_api_delete_call_string(self, id):
+        """
+    
+        """
+        return super().get_api_delete_call_string() % (self.parents[0], self.parents[1], self.parents[2], id)
 
 class Zones(IsiJson):
     """
