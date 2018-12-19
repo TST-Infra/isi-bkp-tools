@@ -68,6 +68,40 @@ def restore_all(restore_file):
             else:
                 print('Erro')
 
+def delete_all(delete):
+    # remover os objetos na origem
+
+    for object_type in ['pools','zones','subnets']:
+
+        for file_name in restore_dict[object_type]:
+
+            isiJsonObject = None
+            id = None
+
+            if object_type == 'zones':
+                
+                m = re.search(r'^(\w+)\-([\w\.\-_\d]+).json', file_name)
+                
+                if m:
+                    tipo = m.group(1)
+                    id = m.group(2)
+                    isiJsonObject = globals()[CLASS_NAMES[tipo]]()
+                    
+            else:
+                m = re.search(r'^(\w+)\-([\w\.\-]+)\.([\w\.\-_\d]+).json', file_name)
+
+                if m:
+                    tipo = m.group(1)
+                    parents = m.group(2).split('.')
+                    id = m.group(3)
+                    isiJsonObject = globals()[CLASS_NAMES[tipo]](parents)
+                    
+            if isiJsonObject:
+                print(type(isiJsonObject))
+                isiJsonObject.delete(id)
+            else:
+                restore_all(restore_dict)
+
 def restore_objects_in_original_groupnet(original_groupnet):
     """
     Carrega os objetos na sua conf padrão na Groupnet de origem (restaure controlado)
@@ -151,74 +185,41 @@ if __name__ == "__main__":
                     new_objects[object_type].append(json_object)
                     restore_dict[object_type].append(file_name)
 
-    # remover os objetos na origem
-    # ['pools','shares','exports','zones','subnets']
 
-#    for object_type in ['pools','zones','subnets']:
-#
-#        for file_name in restore_dict[object_type]:
-#
-#            isiJsonObject = None
-#            id = None
-#
-#            if object_type == 'zones':
-#                
-#                m = re.search(r'^(\w+)\-([\w\.\-_\d]+).json', file_name)
-#                
-#                if m:
-#                    tipo = m.group(1)
-#                    id = m.group(2)
-#                    isiJsonObject = globals()[CLASS_NAMES[tipo]]()
-#                    
-#            else:
-#                m = re.search(r'^(\w+)\-([\w\.\-]+)\.([\w\.\-_\d]+).json', file_name)
-#
-#                if m:
-#                    tipo = m.group(1)
-#                    parents = m.group(2).split('.')
-#                    id = m.group(3)
-#                    isiJsonObject = globals()[CLASS_NAMES[tipo]](parents)
-#                    
-#            if isiJsonObject:
-#                print(type(isiJsonObject))
-#                isiJsonObject.delete(id)
-#            else:
-#                None
-#                #gerar excecao se nao houver o objeto criado
-#                #restore_all(restore_dict)
+# criar os objetos no destino
 
+    for object_type in ['zones','shares','exports','subnets','pools','rules']:
 
-    # criar os objetos no destino
+        for json_object in new_objects[object_type]:
 
-#    for object_type in ['zones','shares','exports','subnets','pools','rules']:
-#
-#        for json_object in new_objects[object_type]:
-#
-#            if object_type == 'shares':
-#                zone_name = shares_zone_map[json_object['path']]
-#                shares = Shares([zone_name])
-#                shares.create(json_object)
-#            elif object_type == 'exports':
-#                zone_name = json_object['zone']
-#                exports = Exports([zone_name])
-#                exports.create(json_object)
-#            elif object_type == 'zones':
-#                zone_id = json_object['id']
-#                zone = Zones()
-#                zone.create(json_object)
-#            elif object_type == 'subnets':
-#                id_sub = (json_object['id'])
-#                m = re.search(r'^(\w+)\.([\w\.\-]+)', id_sub)
-#                parents = m.group(1)
-#                subnet = Subnets([parents])
-#                subnet.create(json_object)
-#            elif object_type == 'pools':
-#                id_pool = (json_object['id'])
-#                m = re.search(r'^(\w+)\.(\w+)', id_pool)
-#                groupnet = m.group(1)
-#                subnet = m.group(2)
-#                # pool = Pools([groupnet], [subnet])
-#                # pool.create(json_object)
+            if object_type == 'shares':
+                zone_name = shares_zone_map[json_object['path']]
+                shares = Shares([zone_name])
+                shares.create(json_object)
+            elif object_type == 'exports':
+                zone_name = json_object['zone']
+                exports = Exports([zone_name])
+                exports.create(json_object)
+            elif object_type == 'zones':
+                zone_id = json_object['id']
+                zone = Zones()
+                zone.create(json_object)
+            elif object_type == 'subnets':
+                id_sub = (json_object['id'])
+                m = re.search(r'^(\w+)\.([\w\.\-]+)', id_sub)
+                parents = m.group(1)
+                subnet = Subnets([parents])
+                subnet.create(json_object)
+            elif object_type == 'pools':
+                id_pool = (json_object['id'])
+                m = re.search(r'^(\w+)\.(\w+)', id_pool)
+                groupnet = m.group(1)
+                subnet = m.group(2)
+                # pool = Pools([groupnet], [subnet])
+                # pool.create(json_object)
 
     # restaurar tudo
-    restore_all(restore_dict)
+    # restore_all(restore_dict)
+
+    # deletar tudo
+    # delete_all(restore_dict)
