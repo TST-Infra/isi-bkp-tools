@@ -12,11 +12,10 @@ API_CALLS = {
 }
 
 API_CALLS_DELETE = {
-    'groupnets': '/3/network/groupnets',
-    'subnets': '/3/network/groupnets/%s/subnets',
+    'subnets': '/3/network/groupnets/%s/subnets/%s',
     'pools': '/3/network/groupnets/%s/subnets/%s/pools/%s',
-    'rules': '/3/network/groupnets/%s/subnets/%s/pools/%s/rules',
-    'zones': '/3/zones',
+    'rules': '/3/network/groupnets/%s/subnets/%s/pools/%s/rules/%s',
+    'zones': '/3/zones/%s',
     'shares': '/4/protocols/smb/shares?zone=%s',
     'exports': '/4/protocols/nfs/exports?zone=%s',
 }
@@ -191,7 +190,7 @@ class IsiJson(object):
             print('Arquivos deletados com sucesso')
         else:
             print('Falha ao deletar')
-            print(response.text)
+            #print(response.text)
 
 
 class Groupnets(IsiJson):
@@ -288,6 +287,12 @@ class Zones(IsiJson):
         json_object['auth_providers'] = auth_providers
 
         return json_object
+    
+    def get_api_delete_call_string(self, id):
+        """
+    
+        """
+        return super().get_api_delete_call_string() % (id)
 
     
 class Shares(IsiJson):
@@ -307,7 +312,7 @@ class Shares(IsiJson):
         """
 
         """
-        return super().get_api_delete_call_string() % (id, self.parents[0])
+        return super().get_api_delete_call_string() % (self.parents[0], id)
 
     def generate_dump_name(self, sub_object_id):
         """
@@ -333,7 +338,7 @@ class Exports(IsiJson):
         """
 
         """
-        return super().get_api_delete_call_string() % (id, self.parents[0])
+        return super().get_api_delete_call_string() % (self.parents[0], id)
 
     def generate_dump_name(self, sub_object_id):
         """
