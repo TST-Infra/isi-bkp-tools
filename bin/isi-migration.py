@@ -193,7 +193,7 @@ if __name__ == "__main__":
         for json_object in new_objects[object_type]:
 
             if object_type == 'shares':
-                zone_name = shares_zone_map[json_object['path']]
+                zone_name = shares_zone_map[json_object['path']]    
                 shares = Shares([zone_name])
                 shares.create(json_object)
             elif object_type == 'exports':
@@ -213,13 +213,13 @@ if __name__ == "__main__":
             elif object_type == 'pools':
                 id_pool = (json_object['id'])
                 m = re.search(r'^(\w+)\.(\w+)', id_pool)
-                groupnet = m.group(1)
-                subnet = m.group(2)
-                # pool = Pools([groupnet], [subnet])
-                # pool.create(json_object)
+                parents = m.group(2)
+                pool = Pools(parents)
+                pool.create(json_object)
 
     # restaurar tudo
     # restore_all(restore_dict)
 
     # deletar tudo
     # delete_all(restore_dict)
+    

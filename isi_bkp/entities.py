@@ -180,7 +180,7 @@ class IsiJson(object):
         if response.status_code == 201:
             print('201 Created')
         else:
-            print('error 404')
+            print(response.text)
             
     def delete(self, id):
         
