@@ -10,6 +10,12 @@ import argparse, os, re, sys, shutil, json
 GROUPNET_ORIGEM='groupnet1'
 GROUPNET_DESTINO='groupnet0'
 
+parser = argparse.ArgumentParser(description='bkp-tools')
+parser.add_argument('-u','--username', type=str, metavar='', required=False, help='Inform username to connect')
+parser.add_argument('-p','--password', type=str, metavar='', required=False, help='Inform password to connect')
+parser.add_argument('-url','--api_url', type=str, metavar='', required=False, help='Inform url to connect')
+args = parser.parse_args()
+
 def dump_conf_to_stage():
     """
     Carrega os JSONs na area de stage
@@ -119,12 +125,13 @@ def nested_dict(n, type):
 
 if __name__ == "__main__":
 
-    #Connect.set_connection_params(username = args.username, password = args.password, api_url = args.api_url)
+    if args.username and args.password and args.api_url:
+        Connect.set_connection_params(username = args.username, password = args.password, api_url = args.api_url)
     
-    stage_json = dict()    # dict de objetos JSON nos arquivos da area de STAGE (file_name -> json)
-    new_objects = nested_dict(1, list) # dict de objetos JSON modificados para a carga (object_type -> json)
+    stage_json = dict()                 # dict de objetos JSON nos arquivos da area de STAGE (file_name -> json)
+    new_objects = nested_dict(1, list)  # dict de objetos JSON modificados para a carga (object_type -> json)
     restore_dict = nested_dict(1, list) # dict de files para a restauracao (object_type -> file_name)
-    shares_zone_map = dict()
+    shares_zone_map = dict()            # map de shares para cada zone (share path -> zone name)
 
     groupnet_zones = list()
 
