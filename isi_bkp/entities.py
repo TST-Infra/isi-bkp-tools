@@ -13,6 +13,15 @@ API_CALLS = {
     'quotas': '/1/quota/quotas',
 }
 
+API_CALLS_DELETE = {
+    'subnets': '/3/network/groupnets/%s/subnets/%s',
+    'pools': '/3/network/groupnets/%s/subnets/%s/pools/%s',
+    'rules': '/3/network/groupnets/%s/subnets/%s/pools/%s/rules/%s',
+    'zones': '/3/zones/%s',
+    'shares': '/4/protocols/smb/shares?zone=%s',
+    'exports': '/4/protocols/nfs/exports?zone=%s',
+}
+
 CLASS_NAMES = {
     'groupnets': 'Groupnets',
     'subnets': 'Subnets',
@@ -124,12 +133,12 @@ class IsiJson(object):
         for object_data in self.objects:
             
             object_name = object_data['name']
-
+            
             for child_attribute in self.children:
 
                 if len(object_data[child_attribute]):
                     
-                    parents = self.parents
+                    parents = list(self.parents)
                     parents.append(object_name)
 
                     child_object = globals()[CLASS_NAMES[child_attribute]](parents)
@@ -140,6 +149,12 @@ class IsiJson(object):
 
         """
         return Connect.api_url + API_CALLS[self.json_attribute_name]
+
+    def get_api_delete_call_string(self, *args):
+        """
+
+        """
+        return Connect.api_url + API_CALLS_DELETE[self.json_attribute_name]
 
     def restore(self, backup_file_name):
         """
@@ -160,6 +175,28 @@ class IsiJson(object):
                 else:
                     print('Falha no processo de restore')
                     print(response.text)
+
+    def create(self, data):
+
+        clean_data = self._exclude_keys_from_json(data)
+
+        response = requests.post(self.get_api_call_string(), auth=(Connect.username, Connect.password), verify=False, data = dumps(clean_data))
+        
+        if response.status_code == 201:
+            print('201 Created')
+        else:
+            print(response.text)
+            
+    def delete(self, id):
+        
+        response = requests.delete(self.get_api_delete_call_string(id), auth=(Connect.username, Connect.password), verify=False)
+
+        if response.status_code == 204:
+            print('Arquivos deletados com sucesso')
+        else:
+            print('Falha ao deletar')
+            #print(response.text)
+
 
 class Groupnets(IsiJson):
     """
@@ -183,6 +220,13 @@ class Subnets(IsiJson):
         """
         return super().get_api_call_string() % (self.parents[0])
 
+    def get_api_delete_call_string(self, id):
+        """
+    
+        """
+        return super().get_api_delete_call_string() % (self.parents[0], id)
+    
+
 class Pools(IsiJson):
     """
 
@@ -196,6 +240,12 @@ class Pools(IsiJson):
 
         """
         return super().get_api_call_string() % (self.parents[0], self.parents[1])
+    
+    def get_api_delete_call_string(self, id):
+        """
+    
+        """
+        return super().get_api_delete_call_string() % (self.parents[0], self.parents[1], id)
 
 class Rules(IsiJson):
     """
@@ -210,6 +260,12 @@ class Rules(IsiJson):
 
         """
         return super().get_api_call_string() % (self.parents[0], self.parents[1], self.parents[2])
+
+    def get_api_delete_call_string(self, id):
+        """
+    
+        """
+        return super().get_api_delete_call_string() % (self.parents[0], self.parents[1], self.parents[2], id)
 
 class Zones(IsiJson):
     """
@@ -236,6 +292,12 @@ class Zones(IsiJson):
         json_object['auth_providers'] = auth_providers
 
         return json_object
+    
+    def get_api_delete_call_string(self, id):
+        """
+    
+        """
+        return super().get_api_delete_call_string() % (id)
 
     
 class Shares(IsiJson):
@@ -251,6 +313,12 @@ class Shares(IsiJson):
         """
         return super().get_api_call_string() % (self.parents[0])
 
+    def get_api_delete_call_string(self, id):
+        """
+
+        """
+        return super().get_api_delete_call_string() % (self.parents[0], id)
+
     def generate_dump_name(self, sub_object_id):
         """
 
@@ -262,7 +330,7 @@ class Exports(IsiJson):
 
     """
     json_attribute_name = 'exports'
-    exclude_keys_for_restore = ['conflicting_paths', 'id', 'unresolved_clients']
+    exclude_keys_for_restore = ['conflicting_paths', 'id', 'unresolved_clients', 'snapshot']
 
 
     def get_api_call_string(self):
@@ -270,6 +338,12 @@ class Exports(IsiJson):
 
         """
         return super().get_api_call_string() % (self.parents[0])
+    
+    def get_api_delete_call_string(self, id):
+        """
+
+        """
+        return super().get_api_delete_call_string() % (self.parents[0], id)
 
     def generate_dump_name(self, sub_object_id):
         """
@@ -301,4 +375,16 @@ class Quotas(IsiJson):
 
     """
     json_attribute_name = 'quotas'
-    exclude_keys_for_restore = ['id']
+    exclude_keys_for_restore = ['id', 'linked', 'notifications', 'ready', 'usage']
+
+    def _exclude_keys_from_json(self, json_object):
+        """
+
+        """
+        json_object = super()._exclude_keys_from_json(json_object)
+        thresholds_conf = json_object['thresholds']
+
+        for conf_name in ['advisory_exceeded', 'advisory_last_exceeded', 'hard_exceeded', 'hard_last_exceeded', 'soft_exceeded', 'soft_last_exceeded']:
+            thresholds_conf.pop(conf_name, None)
+
+        return json_object
