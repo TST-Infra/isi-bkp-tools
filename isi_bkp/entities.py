@@ -9,6 +9,8 @@ API_CALLS = {
     'zones': '/3/zones',
     'shares': '/4/protocols/smb/shares?zone=%s',
     'exports': '/4/protocols/nfs/exports?zone=%s',
+    'aliases': '/2/protocols/nfs/aliases?zone=%s',
+    'quotas': '/1/quota/quotas',
 }
 
 CLASS_NAMES = {
@@ -17,6 +19,10 @@ CLASS_NAMES = {
     'pools': 'Pools',
     'rules': 'Rules',
     'zones': 'Zones',
+    'shares': 'Shares',
+    'exports': 'Exports',
+    'aliases': 'Aliases',
+    'quotas': 'Quotas',
 }
 
 STAGE_DIR = '/opt/isi-bkp-tools/stage'
@@ -26,13 +32,14 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 class Connect():
     """
-
+    Stores isilon cluster connection credentials
     """
 
     username = 'root'
     password = 'laboratory'
     api_url  = 'https://labisilon-mgr.rede.tst:8080/platform'
 
+    @staticmethod
     def set_connection_params(**kwargs):
         Connect.username = kwargs['username']
         Connect.password = kwargs['password']
@@ -269,4 +276,29 @@ class Exports(IsiJson):
 
         """
         return '%s-%s.%s.json' % (self.json_attribute_name, self.parents[0], sub_object_id)
+
+class Aliases(IsiJson):
+    """
+
+    """
+    json_attribute_name = 'aliases'
+    exclude_keys_for_restore = ['id']
+
+    def get_api_call_string(self):
+        """
+
+        """
+        return super().get_api_call_string() % (self.parents[0])
+
+    def generate_dump_name(self, sub_object_id):
+        """
+
+        """
+        return '%s-%s.%s.json' % (self.json_attribute_name, self.parents[0], sub_object_id.replace('/','_'))
         
+class Quotas(IsiJson):
+    """
+
+    """
+    json_attribute_name = 'quotas'
+    exclude_keys_for_restore = ['id']
