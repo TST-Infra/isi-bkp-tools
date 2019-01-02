@@ -1,5 +1,9 @@
 #!/usr/bin/python3
 
+"""
+
+"""
+
 from isi_bkp.entities import (
     Groupnets, Zones, Shares, Exports, Aliases, Connect, Pools, Rules, Quotas, STAGE_DIR, BACKUP_DIR, CLASS_NAMES
 )
@@ -18,12 +22,12 @@ args = parser.parse_args()
 
 def dump_conf_to_stage():
     """
-
+    Dump Isilon configurations to filesystem
     """
     # cria os diretorios, se nao existirem
     for dir_path in [STAGE_DIR, BACKUP_DIR]:
         if not os.path.isdir(dir_path): 
-            os.mkdir(dir_path)
+            os.makedirs(dir_path)
 
     # backup de groupnets e filhos
     groupnets = Groupnets()
@@ -37,7 +41,7 @@ def dump_conf_to_stage():
     quotas = Quotas()
     quotas.backup()
 
-    # para cada zone, backup de exports e shares
+    # para cada zone, backup de exports, shares e aliases
     for zone in zones.objects:
 
         share = Shares([zone['name']])
@@ -51,7 +55,7 @@ def dump_conf_to_stage():
 
 def backup():
     """
-
+    Backup all configured objects in Isilon
     """
     dump_conf_to_stage()
     stringDate = datetime.now().strftime("%Y%m%d_%H%M")
@@ -82,7 +86,7 @@ def backup():
 
 def restore(file_name):
     """
-
+    Restore a isilon object using a backup file
     """
     # expressao regular adaptada para o caso de objetos que possuem parents
     m_parents = re.search(r'^(\w+)\-([\w\.\-]+)\.[\w\.\-_\d]+.json', file_name)
@@ -102,7 +106,7 @@ def restore(file_name):
 
 def list_backup(filter):
     """
-
+    List all backups 
     """
     for file_name in os.listdir(BACKUP_DIR):
         if filter in file_name or filter == 'all':
