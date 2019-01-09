@@ -73,6 +73,12 @@ def backup():
                     stage_json = load(stage_fh)
                     backup_json = load(backup_fh)
 
+                    # se quotas, remover a chave usage
+                    #TODO dar uma solucao mais estilosa para esse problema do backup de quotas
+                    if 'quotas' in file_name:
+                        stage_json.pop('usage', None)
+                        backup_json.pop('usage', None)
+
                     if stage_json != backup_json:
                         old_version_file_path = os.path.join(BACKUP_DIR, '%s_%s.json' %(file_name[:-5],stringDate))
                         shutil.move(file_path_backup, old_version_file_path)
